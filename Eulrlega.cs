@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 public static class Eulrlega {
 
@@ -30,20 +30,22 @@ public static class Eulrlega {
     };
 
     // Usage: "{0}.은 {1}.이 {2}.를 {3}마리나 먹는걸 보았다".FormatK("김기사", "피자", "치킨", 30)
+    // Usage2: "<color=#FFFF00>{0}</color>.을 획득하였습니다!".FormatK("브로드 소드")
     public static string FormatK(this string str, params object[] values) {
         for (var i = 0; i < Formats.Length; i++) {
-            var token1 = string.Concat("}.", Formats[i][0]);
-            var token2 = string.Concat("}.", Formats[i][1]);
+            var token1 = string.Concat(".", Formats[i][0]);
+            var token2 = string.Concat(".", Formats[i][1]);
             if (str.Contains(token1) || str.Contains(token2)) {
-                while (str.Contains(token1) || str.Contains(token2)) {
-                    // }.? => }*?
+                var l = 0;
+                while ((str.Contains(token1) || str.Contains(token2)) && l++ < 10000) {
+                    // .? => *?
                     str = ProcessFormat(str, Formats[i][0], Formats[i], values);
                     str = ProcessFormat(str, Formats[i][1], Formats[i], values);
                 }
 
-                // }*? => }?
-                str = str.Replace(string.Concat("}*", Formats[i][0]), string.Concat("}", Formats[i][0]))
-                    .Replace(string.Concat("}*", Formats[i][1]), string.Concat("}", Formats[i][1]));
+                // *? => ?
+                str = str.Replace(string.Concat("*", Formats[i][0]), Formats[i][0])
+                    .Replace(string.Concat("*", Formats[i][1]), Formats[i][1]);
             }
         }
 
@@ -51,14 +53,17 @@ public static class Eulrlega {
     }
 
     private static string ProcessFormat(string str, string target, string[] eulrl, object[] values) {
-        var token = string.Concat("}.", target);
+        var token = string.Concat(".", target);
         if (str.Contains(token)) {
             var paramIdx = -1;
             var idx = str.IndexOf(token, StringComparison.CurrentCultureIgnoreCase);
             if (idx >= 2) {
+                var closeIdx = -1;
                 for (var i = idx; i >= 0; i--) {
-                    if (str[i] == '{') {
-                        int.TryParse(str.Substring(i + 1, idx - (i + 1)), out paramIdx);
+                    if (str[i] == '}') {
+                        closeIdx = i;
+                    } else if (str[i] == '{') {
+                        int.TryParse(str.Substring(i + 1, closeIdx - (i + 1)), out paramIdx);
                         break;
                     }
                 }
@@ -70,8 +75,8 @@ public static class Eulrlega {
                     var hasProp = HasProp(word);
 
                     var charArr = str.ToCharArray();
-                    charArr[idx + 1] = '*';
-                    charArr[idx + 2] = eulrl[hasProp ? 0 : 1][0];
+                    charArr[idx] = '*';
+                    charArr[idx + 1] = eulrl[hasProp ? 0 : 1][0];
                     str = new string(charArr);
                 }
             }
