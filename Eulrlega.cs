@@ -11,22 +11,12 @@ public static class Eulrlega {
         return (last - 0xAC00) % 28 + 0x11a7 != 4519;
     }
 
-    public static string GetEulrl(string word) {
-        return HasProp(word) ? "을" : "를";
-    }
-
-    public static string GetEga(string word) {
-        return HasProp(word) ? "이" : "가";
-    }
-
-    public static string GetEunnn(string word) {
-        return HasProp(word) ? "은" : "는";
-    }
-
     private static readonly string[][] Formats = {
         new []{"을", "를"},
         new []{"이", "가"},
         new []{"은", "는"},
+        new []{"과", "와"},
+        new []{"으로", "로"},
     };
 
     // Usage: "{0}.은 {1}.이 {2}.를 {3}마리나 먹는걸 보았다".FormatK("김기사", "피자", "치킨", 30)
@@ -77,12 +67,59 @@ public static class Eulrlega {
                     var charArr = str.ToCharArray();
                     charArr[idx] = '*';
                     charArr[idx + 1] = eulrl[hasProp ? 0 : 1][0];
+
+                    var useTrashChar = false;
+
+                    // 로/으로 같이 두 토큰의 길이가 다른 경우에 대한 처리
+                    if (target.Length > 1) {
+                        if (eulrl[hasProp ? 0 : 1].Length > 1) { // .으로 => 으로
+                            for (var i = 0; i < target.Length - 1; i++)
+                                charArr[idx + 1 + i] = eulrl[hasProp ? 0 : 1][i];
+                        } else { // .으로 => 로
+                            for (var i=0; i < target.Length - 1; i++)
+                                charArr[idx + 1 + i] = (char) 9999;
+                            useTrashChar = true;
+                        }
+                    } else {
+                        if (eulrl[hasProp ? 0 : 1].Length > 1) { // .로 => .으로
+                            var gap = eulrl[hasProp ? 0 : 1].Length - target.Length;
+                            Array.Resize(ref charArr, charArr.Length + gap);
+                            for (var i = charArr.Length - 1; i >= idx + 2; i--) // => 로 밀어내고
+                                charArr[i] = charArr[i - gap];
+                            for (var i = 0; i < gap; i++) // 생긴 공간에 옮김
+                                charArr[idx + 2 + i] = eulrl[hasProp ? 0 : 1][1 + i];
+                        } 
+                        // .로 => .로 는 위에서 처리됨
+                    }
+
                     str = new string(charArr);
+                    if (useTrashChar)
+                        str = str.Replace(new string(new[] {(char) 9999}), "");
                 }
             }
         }
 
         return str;
+    }
+
+    public static string GetEulrl(string word) {
+        return HasProp(word) ? "을" : "를";
+    }
+
+    public static string GetEga(string word) {
+        return HasProp(word) ? "이" : "가";
+    }
+
+    public static string GetEunnn(string word) {
+        return HasProp(word) ? "은" : "는";
+    }
+
+    public static string GetGwha(string word) {
+        return HasProp(word) ? "과" : "와";
+    }
+
+    public static string GetEuroro(string word) {
+        return HasProp(word) ? "으로" : "로";
     }
 
 }
