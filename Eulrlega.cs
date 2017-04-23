@@ -12,11 +12,22 @@ public static class Eulrlega {
     }
 
     private static readonly string[][] Formats = {
+        // '이'와 겹쳐서 먼저 처리함
+        new []{"이시여", "시여"},  
+        new []{"으로부터", "로부터"}, 
+        new []{"이나마", "나마"},  
+        new []{"이야말로", "야말로"},  
+        new []{"이든지", "든지"}, 
+        new []{"이여", "여"}, 
+        new []{"이랑", "랑"},
+        new []{"이라", "라"},
+        new []{"이란", "란"},
         new []{"을", "를"},
         new []{"이", "가"},
         new []{"은", "는"},
         new []{"과", "와"},
         new []{"으로", "로"},
+        new []{"아", "야"},
     };
 
     // Usage: "{0}.은 {1}.이 {2}.를 {3}마리나 먹는걸 보았다".FormatK("김기사", "피자", "치킨", 30)
@@ -70,26 +81,29 @@ public static class Eulrlega {
 
                     var useTrashChar = false;
 
-                    // 로/으로 같이 두 토큰의 길이가 다른 경우에 대한 처리
-                    if (target.Length > 1) {
-                        if (eulrl[hasProp ? 0 : 1].Length > 1) { // .으로 => 으로
+                    // 토큰 중 하나라도 2글자 이상인 경우에 대한 처리
+                    if (target.Length > 1 || eulrl[hasProp ? 0 : 1].Length > 1) {
+                        // 로/으로 같이 두 토큰의 길이가 다른 경우에 대한 처리
+                        if (target.Length != eulrl[hasProp ? 0 : 1].Length) {
+                            if (target.Length > eulrl[hasProp ? 0 : 1].Length) { // 줄어드는 경우
+                                for (var i = 0; i < eulrl[hasProp ? 0 : 1].Length; i++) // 복사하고
+                                    charArr[idx + 1 + i] = eulrl[hasProp ? 0 : 1][i];
+                                var gap = target.Length - eulrl[hasProp ? 0 : 1].Length; // 남는 공간 삭제
+                                for (var i = 0; i < gap; i++)
+                                    charArr[idx + eulrl[hasProp ? 0 : 1].Length + 1 + i] = (char)9999;
+                                useTrashChar = true;
+                            } else { // 늘어나는 경우
+                                var gap = eulrl[hasProp ? 0 : 1].Length - target.Length;
+                                Array.Resize(ref charArr, charArr.Length + gap); // 배열 리사이징 후
+                                for (var i = charArr.Length - 1; i >= idx + 2; i--) // => 로 밀어내고
+                                    charArr[i] = charArr[i - gap];
+                                for (var i = 0; i < gap; i++) // 생긴 공간에 옮김
+                                    charArr[idx + 2 + i] = eulrl[hasProp ? 0 : 1][1 + i];
+                            }
+                        } else { // 길이가 같은 경우 그냥 복사
                             for (var i = 0; i < target.Length - 1; i++)
                                 charArr[idx + 1 + i] = eulrl[hasProp ? 0 : 1][i];
-                        } else { // .으로 => 로
-                            for (var i=0; i < target.Length - 1; i++)
-                                charArr[idx + 1 + i] = (char) 9999;
-                            useTrashChar = true;
                         }
-                    } else {
-                        if (eulrl[hasProp ? 0 : 1].Length > 1) { // .로 => .으로
-                            var gap = eulrl[hasProp ? 0 : 1].Length - target.Length;
-                            Array.Resize(ref charArr, charArr.Length + gap);
-                            for (var i = charArr.Length - 1; i >= idx + 2; i--) // => 로 밀어내고
-                                charArr[i] = charArr[i - gap];
-                            for (var i = 0; i < gap; i++) // 생긴 공간에 옮김
-                                charArr[idx + 2 + i] = eulrl[hasProp ? 0 : 1][1 + i];
-                        } 
-                        // .로 => .로 는 위에서 처리됨
                     }
 
                     str = new string(charArr);
@@ -100,26 +114,6 @@ public static class Eulrlega {
         }
 
         return str;
-    }
-
-    public static string GetEulrl(string word) {
-        return HasProp(word) ? "을" : "를";
-    }
-
-    public static string GetEga(string word) {
-        return HasProp(word) ? "이" : "가";
-    }
-
-    public static string GetEunnn(string word) {
-        return HasProp(word) ? "은" : "는";
-    }
-
-    public static string GetGwha(string word) {
-        return HasProp(word) ? "과" : "와";
-    }
-
-    public static string GetEuroro(string word) {
-        return HasProp(word) ? "으로" : "로";
     }
 
 }
