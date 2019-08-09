@@ -104,3 +104,7 @@ Debug.Log("{0}.이야말로 콜라와 잘 어울리지".FormatK("피자"));
 Debug.Log("{0}.든지 {1}.든지 빨리 좀 시키자".FormatK("치킨", "피자"));
 => 치킨이든지 피자든지 빨리 좀 시키자
 ```
+
+License
+-------
+**Eulrlega.cs** is under MIT license. See the [LICENSE](LICENSE) file for more info.
