@@ -3,12 +3,15 @@ using System;
 public static class Eulrlega {
 
     public static bool HasProp(string word) {
-        var last = word[word.Length - 1];
+        for (int i = 1; i <= word.Length; i++) {
+            var last = word[word.Length - i];
+            if (last < 0xAC00)
+                continue;
 
-        if (last < 0xAC00)
-            return true;
+            return (last - 0xAC00) % 28 + 0x11a7 != 4519;
+        }
 
-        return (last - 0xAC00) % 28 + 0x11a7 != 4519;
+        return false;
     }
 
     private static readonly string[][] Formats = {
